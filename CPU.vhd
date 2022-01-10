@@ -127,6 +127,8 @@ signal ToIssueInstr_Qi, ToIssueInstr_Qj, ToIssueInstr_ReservStation: STD_LOGIC_V
 signal ToIssueInstr_Vi, ToIssueInstr_Vj: STD_LOGIC_VECTOR(data_width-1 downto 0);
 signal ToIssueInstr_Type: STD_LOGIC_VECTOR(1 downto 0);
 signal ToIssueInstr_Issued: STD_LOGIC;
+signal ToIssueInstr_Qi_WithCDB, ToIssueInstr_Qj_WithCdb: STD_LOGIC_VECTOR(rs_identifier_width-1 downto 0);
+signal ToIssueInstr_Vi_WithCDB, ToIssueInstr_Vj_WithCDB: STD_LOGIC_VECTOR(data_width-1 downto 0);
 
 -- Instruction to be committed
 signal ToCommitInstr_RegDst: STD_LOGIC_VECTOR(reg_identifier_width-1 downto 0);
@@ -287,16 +289,21 @@ REGISTERS_STATUS_COMP: register_status_unit port map (
             Commited_Instr_RegDst => ToCommitInstr_RegDst
             );
             
+ToIssueInstr_Qi_WithCDB <= zeros_rs_id when ToIssueInstr_Qi /= zeros_rs_id and ToIssueInstr_Qi = CDB_Q else ToIssueInstr_Qi;   
+ToIssueInstr_Qj_WithCDB <= zeros_rs_id when ToIssueInstr_Qj /= zeros_rs_id and ToIssueInstr_Qj = CDB_Q else ToIssueInstr_Qj;   
+ToIssueInstr_Vi_WithCDB <= CDB_V when ToIssueInstr_Qi /= zeros_rs_id and ToIssueInstr_Qi = CDB_Q else ToIssueInstr_Vi;   
+ToIssueInstr_Vj_WithCDB <= CDB_V when ToIssueInstr_Qj /= zeros_rs_id and ToIssueInstr_Qj = CDB_Q else ToIssueInstr_Vj;       
+            
 FADDER_RESERV_STATIONS:
     for I in 0 to no_fadder_reserv_stations-1 generate
         FADDER_RESERV_STATION: reservation_station_fadder port map(
                 clk => clk,
                Load => Load_Fadder_Reserv_Station(I),
                Op => ToIssueInstr_OpCode,
-               Qi => ToIssueInstr_Qi,
-               Qj => ToIssueInstr_Qj,
-               Vi => ToIssueInstr_Vi,
-               Vj => ToIssueInstr_Vj,
+               Qi => ToIssueInstr_Qi_WithCDB,
+               Qj => ToIssueInstr_Qj_WithCDB,
+               Vi => ToIssueInstr_Vi_WithCDB,
+               Vj => ToIssueInstr_Vj_WithCDB,
                CDB_V => CDB_V,
                CDB_Q => CDB_Q,
                Commit => Commit_fadder(I),
@@ -311,10 +318,10 @@ FMULTIPLIER_RESERV_STATIONS:
                clk => clk,
                Load => Load_Fmultiplier_Reserv_Station(I),
                Op => ToIssueInstr_OpCode,
-               Qi => ToIssueInstr_Qi,
-               Qj => ToIssueInstr_Qj,
-               Vi => ToIssueInstr_Vi,
-               Vj => ToIssueInstr_Vj,
+               Qi => ToIssueInstr_Qi_WithCDB,
+               Qj => ToIssueInstr_Qj_WithCDB,
+               Vi => ToIssueInstr_Vi_WithCDB,
+               Vj => ToIssueInstr_Vj_WithCDB,
                CDB_V => CDB_V,
                CDB_Q => CDB_Q,
                Commit => Commit_Fmultiplier(I),
